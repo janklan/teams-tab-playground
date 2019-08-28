@@ -1,0 +1,11 @@
+{
+  "generator-teams": {
+    "promptValues": {
+      "developer": "SWOOP Analytics Pty Ltd",
+      "unitTestsEnabled": true,
+      "useAzureAppInsights": false
+    },
+    "libraryName": "swoopTeamsTab",
+    "generator-version": "2.11.1"
+  }
+}
