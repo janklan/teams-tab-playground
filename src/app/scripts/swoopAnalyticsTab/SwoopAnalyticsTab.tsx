@@ -20,6 +20,8 @@ export interface ISwoopAnalyticsTabState extends ITeamsBaseComponentState {
     entityId?: string;
     graphData?: string;
     teamsContext?: string;
+    getTeamsUserResult?: any;
+    tryToAuthenticateResult?: any;
 }
 
 /**
@@ -55,10 +57,11 @@ export class SwoopAnalyticsTab extends TeamsBaseComponent<ISwoopAnalyticsTabProp
                 this.setState({
                     entityId: context.entityId,
                     teamsContext: JSON.stringify(context),
-                    graphData: "Please click the button below to continue.",
+                    graphData: "Please click the button above to continue.",
+                    getTeamsUserResult: "Please click the button above to continue.",
                 });
 
-                this.tryToAuthenticate();
+                // this.tryToAuthenticate();
             });
         } else {
             this.setState({
@@ -88,28 +91,28 @@ export class SwoopAnalyticsTab extends TeamsBaseComponent<ISwoopAnalyticsTabProp
                 <Surface>
                     <Panel>
                         <PanelHeader>
-                            <div style={styles.header}>SWOOP Analytics v8</div>
+                            <div style={styles.header}>SWOOP Analytics v10</div>
                         </PanelHeader>
                         <PanelBody>
                             <strong>Graph data</strong>
                             <div style={styles.section}>
-                                {this.state.graphData}
-                            </div>
-                            <div style={styles.section}>
                                 <PrimaryButton onClick={() => this.getGraphData()}>Get Microsoft Graph data</PrimaryButton>
                             </div>
-
-                            <hr />
-                            <strong>Teams context</strong>
                             <div style={styles.section}>
-                                {this.state.teamsContext}
+                                {this.state.graphData}
                             </div>
 
                             <hr />
                             <PrimaryButton onClick={() => this.getTeamsUser()}>Get the current Teams user</PrimaryButton>
+                            <div style={styles.section}>
+                                {this.state.getTeamsUserResult}
+                            </div>
 
                             <hr />
                             <PrimaryButton onClick={() => this.tryToAuthenticate()}>Try to get the token silently</PrimaryButton>
+                            <div style={styles.section}>
+                                {this.state.tryToAuthenticateResult}
+                            </div>
                         </PanelBody>
                         <PanelFooter>
                             <div style={styles.footer}>
@@ -153,10 +156,20 @@ export class SwoopAnalyticsTab extends TeamsBaseComponent<ISwoopAnalyticsTabProp
     private getTeamsUser() {
         microsoftTeams.authentication.getUser({
             successCallback: (user) => {
-                console.log("user", user);
+                this.setState({
+                    getTeamsUserResult: JSON.stringify({
+                        result: "getTeamsUser OK",
+                        user
+                    }, null, 2)
+                });
             },
             failureCallback: (error) => {
-                console.log("error", error);
+                this.setState({
+                    getTeamsUserResult: JSON.stringify({
+                        result: "getTeamsUser FAIL",
+                        error
+                    }, null, 2)
+                });
             }
         });
     }
