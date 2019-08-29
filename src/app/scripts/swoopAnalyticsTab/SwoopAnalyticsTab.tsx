@@ -19,6 +19,7 @@ import { Auth } from "../auth";
 export interface ISwoopAnalyticsTabState extends ITeamsBaseComponentState {
     entityId?: string;
     graphData?: string;
+    graphDataMsal?: string;
     teamsContext?: string;
     getTeamsUserResult?: any;
     tryToAuthenticateResult?: any;
@@ -40,7 +41,11 @@ export class SwoopAnalyticsTab extends TeamsBaseComponent<ISwoopAnalyticsTabProp
     private groupId?: string;
     private token?: string;
 
+    private auth: Auth;
+
     public componentWillMount() {
+
+        this.auth = new Auth();
 
         this.updateTheme(this.getQueryVariable("theme"));
         this.setState({
@@ -58,6 +63,7 @@ export class SwoopAnalyticsTab extends TeamsBaseComponent<ISwoopAnalyticsTabProp
                     entityId: context.entityId,
                     teamsContext: JSON.stringify(context),
                     graphData: "Please click the button above to continue.",
+                    graphDataMsal: "Please click the button above to continue.",
                     getTeamsUserResult: "Please click the button above to continue.",
                 });
 
@@ -96,10 +102,18 @@ export class SwoopAnalyticsTab extends TeamsBaseComponent<ISwoopAnalyticsTabProp
                         <PanelBody>
                             <strong>Graph data</strong>
                             <div style={styles.section}>
-                                <PrimaryButton onClick={() => this.getGraphData()}>Get Microsoft Graph data</PrimaryButton>
+                                <PrimaryButton onClick={() => this.getGraphData()}>Get Microsoft Graph data (teams authentication)</PrimaryButton>
                             </div>
                             <div style={styles.section}>
                                 {this.state.graphData}
+                            </div>
+
+                            <hr />
+                            <div style={styles.section}>
+                                <PrimaryButton onClick={() => this.getGraphData()}>Get Microsoft Graph data (MSAL authentication)</PrimaryButton>
+                            </div>
+                            <div style={styles.section}>
+                                {this.state.graphDataMsal}
                             </div>
 
                             <hr />
@@ -147,10 +161,33 @@ export class SwoopAnalyticsTab extends TeamsBaseComponent<ISwoopAnalyticsTabProp
         });
     }
 
+    private getGraphDataMsal() {
+        this.setState({
+            graphData: "Loading..."
+        });
+
+        this.auth.performAuthV2MSALPopup();
+
+        microsoftTeams.authentication.authenticate({
+            url: "/auth.html",
+            width: 400,
+            height: 400,
+            successCallback: (data) => {
+                // Note: token is only good for one hour
+                this.token = data!;
+                this.getData(this.token);
+            },
+            failureCallback: (err) => {
+                this.setState({
+                    graphData: "Failed to authenticate and get token.<br/>" + err
+                });
+            }
+        });
+    }
+
     private tryToAuthenticate() {
         console.log("Performing authentication");
-        const auth = new Auth();
-        auth.performAuthV2(false);
+        this.auth.performAuthV2(false);
     }
 
     private getTeamsUser() {

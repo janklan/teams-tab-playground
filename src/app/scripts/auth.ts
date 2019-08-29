@@ -14,6 +14,59 @@ export class Auth {
    */
   constructor() {
     microsoftTeams.initialize();
+
+    const msalConfig: Msal.Configuration = {
+      auth: {
+        clientId: "e743c151-a549-4181-b3e9-e84052c9174c",
+        authority: "https://login.microsoftonline.com/c5870e0f-a946-4008-9f5c-94875cba8b2e" // todo replace with teams context tid
+      }
+    };
+
+    this.msalApp = new Msal.UserAgentApplication(msalConfig);
+    this.msalApp.handleRedirectCallback(() => { const notUsed = ""; });
+  }
+
+  public performAuthV2MSALPopup() {
+
+    const tokenRequest = {
+      scopes: ["https://graph.microsoft.com/User.Read", "https://graph.microsoft.com/User.ReadBasic.All", "email", "profile", "openid"]
+    };
+
+    // if the user is already logged in you can acquire a token
+    if (this.msalApp.getAccount()) {
+      this.msalApp.acquireTokenSilent(tokenRequest)
+        .then(response => {
+          console.log("Response0", response);
+          // get access token from response
+          // response.accessToken
+        })
+        .catch(err => {
+          // could also check if err instance of InteractionRequiredAuthError if you can import the class.
+          if (err.name === "InteractionRequiredAuthError") {
+            return this.msalApp.acquireTokenPopup(tokenRequest)
+              .then(response => {
+                console.log("Response1", response);
+                // get access token from response
+                // response.accessToken
+              })
+              .catch(err => {
+                console.log("Error1", err);
+                // handle error
+              });
+          }
+        });
+    } else {
+      return this.msalApp.acquireTokenPopup(tokenRequest)
+              .then(response => {
+                console.log("Response2", response);
+                // get access token from response
+                // response.accessToken
+              })
+              .catch(err => {
+                console.log("Error2", err);
+                // handle error
+              });
+    }
   }
 
   public performAuthV2(teamsFlow: boolean = true) {
@@ -21,19 +74,11 @@ export class Auth {
     // Setup auth parameters for MSAL
     const graphAPIScopes: string[] = ["https://graph.microsoft.com/User.Read", "https://graph.microsoft.com/User.ReadBasic.All", "email", "profile", "openid"];
 
-    let urlParams = new URLSearchParams(location.search);
+    const urlParams = new URLSearchParams(location.search);
     console.log(urlParams);
 
     if (!this.msalApp) {
-      const msalConfig: Msal.Configuration = {
-        auth: {
-          clientId: "e743c151-a549-4181-b3e9-e84052c9174c",
-          authority: "https://login.microsoftonline.com/c5870e0f-a946-4008-9f5c-94875cba8b2e" // todo replace with teams context tid
-        }
-      };
-
-      this.msalApp = new Msal.UserAgentApplication(msalConfig);
-      this.msalApp.handleRedirectCallback(() => { const notUsed = ""; });
+      alert("The MSAL app isn't ready yet");
     }
 
     const userAgentApplication = this.msalApp; // ugly, but done to avoid changing lots of the stock code
