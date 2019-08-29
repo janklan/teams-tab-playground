@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+    Dropdown,
     PrimaryButton,
     Panel,
     PanelBody,
@@ -14,7 +15,7 @@ import TeamsBaseComponent, { ITeamsBaseComponentProps, ITeamsBaseComponentState 
 import * as microsoftTeams from "@microsoft/teams-js";
 
 export interface ISwoopAnalyticsTabConfigState extends ITeamsBaseComponentState {
-    value: string;
+    selectedConfiguration: string;
 }
 
 export interface ISwoopAnalyticsTabConfigProps extends ITeamsBaseComponentProps {
@@ -26,6 +27,13 @@ export interface ISwoopAnalyticsTabConfigProps extends ITeamsBaseComponentProps 
  */
 export class SwoopAnalyticsTabConfig  extends TeamsBaseComponent<ISwoopAnalyticsTabConfigProps, ISwoopAnalyticsTabConfigState> {
 
+    private configOptions = [
+        { key: "MBR", value: "Member information" },
+        { key: "GRP", value: "Group information (requires admin consent)" }
+    ];
+    private selectedOption: string = "";
+    private tenantId?: string = "";
+
     public componentWillMount() {
         this.updateTheme(this.getQueryVariable("theme"));
         this.setState({
@@ -36,8 +44,10 @@ export class SwoopAnalyticsTabConfig  extends TeamsBaseComponent<ISwoopAnalytics
             microsoftTeams.initialize();
 
             microsoftTeams.getContext((context: microsoftTeams.Context) => {
+                this.tenantId = context.tid;
+                this.selectedOption = context.entityId;
                 this.setState({
-                    value: context.entityId
+                    selectedConfiguration: context.entityId
                 });
                 this.setValidityState(true);
             });
@@ -49,7 +59,7 @@ export class SwoopAnalyticsTabConfig  extends TeamsBaseComponent<ISwoopAnalytics
                     contentUrl: host + "/swoopAnalyticsTab/?data=",
                     suggestedDisplayName: "SWOOP Analytics",
                     removeUrl: host + "/swoopAnalyticsTab/remove.html",
-                    entityId: this.state.value
+                    entityId: this.state.selectedConfiguration
                 });
                 saveEvent.notifySuccess();
             });
@@ -74,24 +84,23 @@ export class SwoopAnalyticsTabConfig  extends TeamsBaseComponent<ISwoopAnalytics
                 <Surface>
                     <Panel>
                         <PanelHeader>
-                            <div style={styles.header}>Configure your tab</div>
+                            <div style={styles.header}>Settings</div>
                         </PanelHeader>
                         <PanelBody>
-                            <div style={styles.section}>
-                                <Input
+                            <div style={styles.section}>Microsoft Graph Functionality</div>
+                                <Dropdown
                                     autoFocus
-                                    placeholder="Enter a value here"
-                                    label="Enter a value"
-                                    errorLabel={!this.state.value ? "This value is required" : undefined}
-                                    value={this.state.value}
-                                    onChange={(e) => {
-                                        this.setState({
-                                            value: e.target.value
-                                        });
-                                    }}
-                                    required />
+                                    mainButtonText={this.selectedOption}
+                                    style={{ width: "100%" }}
+                                    items={
+                                        this.configOptions.map((cfgOpt, idx) => {
+                                            return ({ text: cfgOpt.value, onClick: () => this.onConfigSelect(cfgOpt.key) });
+                                        })
+                                    }
+                                />
+                                <div style={styles.section}>
+                                <PrimaryButton onClick={() => this.getAdminConsent()}>Provide administrator consent - click if Tenant Admin</PrimaryButton>
                             </div>
-
                         </PanelBody>
                         <PanelFooter>
                         </PanelFooter>
@@ -99,5 +108,26 @@ export class SwoopAnalyticsTabConfig  extends TeamsBaseComponent<ISwoopAnalytics
                 </Surface>
           `  </TeamsThemeContext.Provider>
         );
+    }
+
+    private onConfigSelect(cfgOption: string) {
+        const selectedItem = this.configOptions.filter((pos, idx) => pos.key === cfgOption)[0];
+        if (selectedItem) {
+            this.setState({
+                selectedConfiguration: selectedItem.key
+            });
+            this.selectedOption = selectedItem.value;
+            this.setValidityState(true);
+        }
+    }
+
+    private getAdminConsent() {
+        microsoftTeams.authentication.authenticate({
+            url: "/adminconsent.html?tenantId=" + this.tenantId,
+            width: 800,
+            height: 600,
+            successCallback: () => { },
+            failureCallback: (err) => { }
+        });
     }
 }

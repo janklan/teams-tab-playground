@@ -11,12 +11,14 @@ import {
 } from "msteams-ui-components-react";
 import TeamsBaseComponent, { ITeamsBaseComponentProps, ITeamsBaseComponentState } from "msteams-react-base-component";
 import * as microsoftTeams from "@microsoft/teams-js";
+import { Auth } from "../auth";
 
 /**
  * State for the swoopAnalyticsTabTab React component
  */
 export interface ISwoopAnalyticsTabState extends ITeamsBaseComponentState {
     entityId?: string;
+    graphData?: string;
 }
 
 /**
@@ -31,7 +33,12 @@ export interface ISwoopAnalyticsTabProps extends ITeamsBaseComponentProps {
  */
 export class SwoopAnalyticsTab extends TeamsBaseComponent<ISwoopAnalyticsTabProps, ISwoopAnalyticsTabState> {
 
+    private configuration?: string;
+    private groupId?: string;
+    private token?: string;
+
     public componentWillMount() {
+
         this.updateTheme(this.getQueryVariable("theme"));
         this.setState({
             fontSize: this.pageFontSize()
@@ -41,6 +48,9 @@ export class SwoopAnalyticsTab extends TeamsBaseComponent<ISwoopAnalyticsTabProp
             microsoftTeams.initialize();
             microsoftTeams.registerOnThemeChangeHandler(this.updateTheme);
             microsoftTeams.getContext((context) => {
+                this.configuration = context.entityId;
+                this.groupId = context.groupId;
+
                 this.setState({
                     entityId: context.entityId
                 });
@@ -72,14 +82,15 @@ export class SwoopAnalyticsTab extends TeamsBaseComponent<ISwoopAnalyticsTabProp
                 <Surface>
                     <Panel>
                         <PanelHeader>
-                            <div style={styles.header}>This is your tab</div>
+                            <div style={styles.header}>SWOOP Analytics</div>
                         </PanelHeader>
                         <PanelBody>
+                            Oy?
                             <div style={styles.section}>
-                                {this.state.entityId}
+                                {this.state.graphData}
                             </div>
                             <div style={styles.section}>
-                                <PrimaryButton onClick={() => alert("It worked!")}>A sample button</PrimaryButton>
+                                <PrimaryButton onClick={() => this.getGraphData()}>Get Microsoft Graph data</PrimaryButton>
                             </div>
                         </PanelBody>
                         <PanelFooter>
@@ -91,5 +102,44 @@ export class SwoopAnalyticsTab extends TeamsBaseComponent<ISwoopAnalyticsTabProp
                 </Surface>
             </TeamsThemeContext.Provider>
         );
+    }
+
+    private getGraphData() {
+        this.setState({
+            graphData: "Loading..."
+        });
+
+        microsoftTeams.authentication.authenticate({
+            url: "/auth.html",
+            width: 400,
+            height: 400,
+            successCallback: (data) => {
+                // Note: token is only good for one hour
+                this.token = data!;
+                this.getData(this.token);
+            },
+            failureCallback: (err) => {
+                this.setState({
+                    graphData: "Failed to authenticate and get token.<br/>" + err
+                });
+            }
+        });
+    }
+
+    private getData(token: string) {
+        let graphEndpoint = "https://graph.microsoft.com/v1.0/me";
+        if (this.configuration === "GRP") {
+            graphEndpoint = "https://graph.microsoft.com/v1.0/groups/" + this.groupId;
+        }
+
+        const req = new XMLHttpRequest();
+        req.open("GET", graphEndpoint, false);
+        req.setRequestHeader("Authorization", "Bearer " + token);
+        req.setRequestHeader("Accept", "application/json;odata.metadata=minimal;");
+        req.send();
+        const result = JSON.parse(req.responseText);
+        this.setState({
+            graphData: JSON.stringify(result, null, 2)
+        });
     }
 }

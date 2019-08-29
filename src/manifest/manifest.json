@@ -3,7 +3,7 @@
   "manifestVersion": "1.5",
   "id": "f6da93f0-c94f-11e9-9e80-0d4d4963d6f0",
   "version": "0.0.1",
-  "packageName": "swoopteamstab",
+  "packageName": "com.swoopanalytics.swoopteams",
   "developer": {
     "name": "SWOOP Analytics Pty Ltd",
     "websiteUrl": "https://{{HOSTNAME}}",
@@ -11,18 +11,18 @@
     "termsOfUseUrl": "https://{{HOSTNAME}}/tou.html"
   },
   "name": {
-    "short": "SWOOP Analytics",
-    "full": "SWOOP Analytics"
+    "short": "Swoop Analytics",
+    "full": "Measure and improve engagement and collaboration"
   },
   "description": {
-    "short": "TODO: add short description here",
-    "full": "TODO: add full description here"
+    "short": "Collaboration Analytics",
+    "full": "Extensive dashboard for analysing your social collaborations. Analyse collaboration patterns across the enterprise and within business units."
   },
   "icons": {
     "outline": "icon-outline.png",
     "color": "icon-color.png"
   },
-  "accentColor": "#D85028",
+  "accentColor": "#FFFFFF",
   "configurableTabs": [
     {
       "configurationUrl": "https://{{HOSTNAME}}/swoopAnalyticsTab/config.html",
