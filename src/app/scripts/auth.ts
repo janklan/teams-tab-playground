@@ -86,7 +86,13 @@ export class Auth {
     // Try to acquire the token used to query Microsoft Graph API silently first:
     userAgentApplication.acquireTokenSilent({ scopes: graphAPIScopes }).then(
       (token) => {
-        console.log("getToken: Token acquired", token);
+        console.log("getToken: ###############");
+        console.log("getToken: ### SUCCESS ###");
+        console.log("getToken: ###############");
+        console.log("getToken: Token acquired silently", token);
+        console.log("getToken: ###############");
+        console.log("getToken: ### SUCCESS ###");
+        console.log("getToken: ###############");
         if (teamsFlow) {
           // After the access token is acquired, return to MS Teams, sending the acquired token
           microsoftTeams.authentication.notifySuccess(token.accessToken);
