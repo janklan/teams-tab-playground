@@ -4,6 +4,9 @@ node_modules
 # do not include the package in Git
 package
 
+# nor the files we can always generate
+dist
+
 # do not include the local environment files
 .env
 
