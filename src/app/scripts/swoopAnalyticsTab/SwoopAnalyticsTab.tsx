@@ -85,7 +85,7 @@ export class SwoopAnalyticsTab extends TeamsBaseComponent<ISwoopAnalyticsTabProp
                             <div style={styles.header}>SWOOP Analytics</div>
                         </PanelHeader>
                         <PanelBody>
-                            Oy?
+                            v2
                             <div style={styles.section}>
                                 {this.state.graphData}
                             </div>
@@ -104,26 +104,34 @@ export class SwoopAnalyticsTab extends TeamsBaseComponent<ISwoopAnalyticsTabProp
         );
     }
 
+
     private getGraphData() {
         this.setState({
-            graphData: "Loading..."
+            graphData: "Loading...."
         });
 
-        microsoftTeams.authentication.authenticate({
-            url: "/auth.html",
-            width: 400,
-            height: 400,
-            successCallback: (data) => {
-                // Note: token is only good for one hour
-                this.token = data!;
-                this.getData(this.token);
-            },
-            failureCallback: (err) => {
-                this.setState({
-                    graphData: "Failed to authenticate and get token.<br/>" + err
-                });
-            }
-        });
+
+        const auth = new Auth();
+
+        console.log(auth.onlineUser);
+
+        if (!auth.onlineUser) {
+            microsoftTeams.authentication.authenticate({
+                url: "/auth.html",
+                width: 400,
+                height: 400,
+                successCallback: (data) => {
+                    // Note: token is only good for one hour
+                    this.token = data!;
+                    this.getData(this.token);
+                },
+                failureCallback: (err) => {
+                    this.setState({
+                        graphData: "Failed to authenticate and get token.<br/>" + err
+                    });
+                }
+            });
+        }
     }
 
     private getData(token: string) {
